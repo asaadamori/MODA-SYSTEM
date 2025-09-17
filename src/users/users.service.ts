@@ -65,8 +65,10 @@ export class UsersService {
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET is not defined');
     }
+
+    const expiresInSeconds = Number(process.env.JWT_EXPIRES_IN) || 60 * 60 * 9;
     return sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
-      expiresIn: parseInt(process.env.JWT_EXPIRES_IN || '3600', 10),
+      expiresIn: expiresInSeconds,
     });
   }
 }
