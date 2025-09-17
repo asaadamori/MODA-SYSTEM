@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserSignUpDto } from './dto/user-signup.dto';
 import { UserEntity } from './entities/user.entity';
@@ -22,5 +22,15 @@ export class UsersController {
     const user = await this.usersService.signin(userSignInDto);
     const accessToken = await this.usersService.accessToken(user);
     return { user, accessToken };
+  }
+
+  @Get('all')
+  async findAll(): Promise<UserEntity[]> {
+    return await this.usersService.findAll();
+  }
+
+  @Get('single/:id')
+  async findOne(@Param('id') id: string): Promise<UserEntity> {
+    return await this.usersService.findOne(+id);
   }
 }
