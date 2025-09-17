@@ -2,6 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserSignUpDto } from './dto/user-signup.dto';
 import { UserEntity } from './entities/user.entity';
+import { UserSignInDto } from './dto/user-signin.dto';
 
 @Controller('users')
 export class UsersController {
@@ -12,5 +13,14 @@ export class UsersController {
     @Body() userSignUpDto: UserSignUpDto,
   ): Promise<{ user: UserEntity }> {
     return { user: await this.usersService.signup(userSignUpDto) };
+  }
+
+  @Post('signin')
+  async signin(
+    @Body() userSignInDto: UserSignInDto,
+  ): Promise<{ user: UserEntity; accessToken: string }> {
+    const user = await this.usersService.signin(userSignInDto);
+    const accessToken = await this.usersService.accessToken(user);
+    return { user, accessToken };
   }
 }
