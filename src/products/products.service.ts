@@ -6,6 +6,7 @@ import { ProductEntity } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { CategoriesService } from 'src/categories/categories.service';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception';
 
 @Injectable()
 export class ProductsService {
@@ -27,16 +28,40 @@ export class ProductsService {
     return await this.productRepository.save(product);
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll(): Promise<ProductEntity[]> {
+    return await this.productRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number): Promise<ProductEntity> {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: { addedBy: true, category: true },
+      select: {
+        addedBy: { id: true, name: true },
+        category: { id: true, title: true },
+      },
+    });
+    if (!product) {
+      throw new NotFoundException(`Product with id ${id} not found`);
+    }
+    return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product ${JSON.stringify(updateProductDto)}`;
+  async update(
+    id: number,
+    updateProductDto: Partial<UpdateProductDto>,
+    currentUser: UserEntity,
+  ): Promise<ProductEntity> {
+    const product = await this.findOne(id);
+    Object.assign(product, updateProductDto);
+    product.addedBy = currentUser;
+    if (updateProductDto.categoryId) {
+      const category = await this.categoriesService.findOne(
+        +updateProductDto.categoryId,
+      );
+      product.category = category;
+    }
+    return await this.productRepository.save(product);
   }
 
   remove(id: number) {
