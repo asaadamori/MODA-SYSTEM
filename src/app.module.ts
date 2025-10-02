@@ -10,6 +10,7 @@ import dataSourceOptions from 'db/data-source';
 import { CurrentUserMiddleware } from './utility/middleware/current-user.middleware';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ProductsModule } from './products/products.module';
     TypeOrmModule.forRoot(dataSourceOptions),
     CategoriesModule,
     ProductsModule,
+    ReviewsModule,
   ],
   controllers: [],
   providers: [],

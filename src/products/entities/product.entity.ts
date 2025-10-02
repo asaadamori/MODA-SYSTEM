@@ -1,10 +1,12 @@
 import { CategoryEntity } from 'src/categories/entities/category.entity';
+import { ReviewEntity } from 'src/reviews/entities/review.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
 import {
+  Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
-  PrimaryColumn,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,19 +16,19 @@ export class ProductEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @PrimaryColumn()
+  @Column()
   title: string;
 
-  @PrimaryColumn()
+  @Column()
   description: string;
 
-  @PrimaryColumn({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   price: number;
 
-  @PrimaryColumn()
+  @Column()
   stock: number;
 
-  @PrimaryColumn('simple-array')
+  @Column('simple-array')
   images: string[];
 
   @CreateDateColumn()
@@ -39,4 +41,7 @@ export class ProductEntity {
 
   @ManyToOne(() => CategoryEntity, (category) => category.products)
   category: CategoryEntity;
+
+  @OneToMany(() => ReviewEntity, (rev) => rev.product)
+  reviews: ReviewEntity[];
 }
