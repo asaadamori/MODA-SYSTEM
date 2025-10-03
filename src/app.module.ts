@@ -11,6 +11,7 @@ import { CurrentUserMiddleware } from './utility/middleware/current-user.middlew
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     CategoriesModule,
     ProductsModule,
     ReviewsModule,
+    OrdersModule,
   ],
   controllers: [],
   providers: [],

@@ -36,7 +36,7 @@ export class CategoriesController {
   }
 
   @Get()
-  async asyncfindAll(): Promise<CategoryEntity[]> {
+  async findAll(): Promise<CategoryEntity[]> {
     return await this.categoriesService.findAll();
   }
 
