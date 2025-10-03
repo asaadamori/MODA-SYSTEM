@@ -9,6 +9,20 @@ import { UserEntity } from 'src/users/entities/user.entity';
 import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception';
 import { OrderStatus } from 'src/orders/enums/order-status.enum';
 
+// Interface للـ query parameters
+interface FindAllQuery {
+  limit?: string | number;
+  page?: string | number;
+}
+
+// Interface للـ response
+interface FindAllResponse {
+  products: ProductEntity[];
+  totalProducts: number;
+  limit: number;
+  currentPage: number;
+}
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -29,8 +43,80 @@ export class ProductsService {
     return await this.productRepository.save(product);
   }
 
-  async findAll(): Promise<ProductEntity[]> {
-    return await this.productRepository.find();
+  async findAll(query: FindAllQuery): Promise<FindAllResponse> {
+    let limit: number;
+    let page: number;
+
+    // تحديد الـ limit (عدد المنتجات في الصفحة)
+    if (!query.limit) {
+      limit = 4;
+    } else {
+      limit = parseInt(String(query.limit));
+    }
+
+    // تحديد رقم الصفحة
+    if (!query.page) {
+      page = 1;
+    } else {
+      page = parseInt(String(query.page));
+    }
+
+    // حساب الـ offset
+    const offset = (page - 1) * limit;
+
+    // إنشاء query builder
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('products')
+      .leftJoinAndSelect('products.reviews', 'review')
+      .leftJoinAndSelect('products.category', 'category')
+      .leftJoinAndSelect('products.addedBy', 'addedBy')
+      .select([
+        'products.id',
+        'products.title',
+        'products.price',
+        'products.stock',
+        'products.createdAt',
+        'products.updatedAt',
+        'category.id',
+        'category.title',
+        'addedBy.id',
+        'addedBy.name',
+      ])
+      .addSelect('COUNT(review.id)', 'reviewCount')
+      .addSelect(
+        'COALESCE(AVG(review.ratings), 0)::DECIMAL(10,2)',
+        'averageRating',
+      )
+      .groupBy('products.id, category.id, addedBy.id')
+      .orderBy('products.createdAt', 'DESC')
+      .limit(limit)
+      .offset(offset);
+
+    // الحصول على المنتجات والعدد الإجمالي
+    const [products, totalProducts] = await Promise.all([
+      queryBuilder.getRawAndEntities(),
+      this.productRepository.count(),
+    ]);
+
+    // تحويل البيانات إلى الشكل المطلوب
+    const productsWithStats = products.entities.map((product, index) => {
+      const rawData = products.raw[index] as {
+        reviewCount?: string;
+        averageRating?: string;
+      };
+      return {
+        ...product,
+        reviewCount: parseInt(String(rawData?.reviewCount || 0)) || 0,
+        averageRating: parseFloat(String(rawData?.averageRating || 0)) || 0,
+      };
+    });
+
+    return {
+      products: productsWithStats,
+      totalProducts,
+      limit,
+      currentPage: page,
+    };
   }
 
   async findOne(id: number): Promise<ProductEntity> {
